@@ -1,0 +1,241 @@
+* Doom Emacs Config
+My Doom Emacs config
+** Todos
+- [ ] enwc
+- [ ] desktop package to control backlight and system audio
+- [ ] display date, time, and battery in doom modeline
+- [ ] winner-mode
+- [ ] loki-network autostart
+- [ ] Better window management (super-shift-vi-key, something other than C-x
+  [0,1,2,3] for window management)
+- [ ] Modify evil keys
+** General Doom Config
+#+BEGIN_SRC elisp
+;; These are used for a number of things, particularly for GPG configuration,
+;; some email clients, file templates and snippets.
+(setq user-full-name "Keshav Italia"
+      user-mail-address "keshavitalia0@gmail.com")
+; Doom exposes five (optional) variables for controlling fonts in Doom. Here
+;; are the three important ones:
+;;
+;; + `doom-font'
+;; + `doom-variable-pitch-font'
+;; + `doom-big-font' -- used for `doom-big-font-mode'
+;;
+;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
+;; font string. You generally only need these two:
+(setq doom-font (font-spec :family "DejaVu Sans Mono" :size 16))
+
+;; There are two ways to load a theme. Both assume the theme is installed and
+;; available. You can either set `doom-theme' or manually load a theme with the
+;; `load-theme' function. These are the defaults.
+
+(setq poet-theme-variable-headers nil)
+(setq doom-theme 'doom-palenight)
+
+(add-hook 'text-mode-hook
+          'auto-fill-mode)
+
+(require 'org-bullets)
+(add-hook 'org-mode-hook (lambda () (org-bullets-mode 1)))
+
+(setq org-directory "~/org/")
+
+;; roam
+(setq org-roam-directory "~/org/roam")
+
+(after! org-roam
+        (map! :leader
+            :prefix "n"
+            :desc "org-roam" "l" #'org-roam
+            :desc "org-roam-insert" "i" #'org-roam-insert
+            :desc "org-roam-switch-to-buffer" "b" #'org-roam-switch-to-buffer
+            :desc "org-roam-find-file" "f" #'org-roam-find-file
+            :desc "org-roam-show-graph" "g" #'org-roam-show-graph
+            :desc "org-roam-insert" "i" #'org-roam-insert
+            :desc "org-roam-capture" "c" #'org-roam-capture))
+
+(require 'company-org-roam)
+    (use-package company-org-roam
+      :when (featurep! :completion company)
+      :after org-roam
+      :config
+      (set-company-backend! 'org-mode '(company-org-roam company-yasnippet company-dabbrev)))
+
+;; If you want to change the style of line numbers, change this to `relative' or
+;; `nil' to disable it:
+(setq display-line-numbers-type `nil)
+(setq display-time-mode 1)
+(setq display-time-day-and-date 1)
+
+
+;; Here are some additional functions/macros that could help you configure Doom:
+;;
+;; - `load!' for loading external *.el files relative to this one
+;; - `use-package' for configuring packages
+;; - `after!' for running code after a package has loaded
+;; - `add-load-path!' for adding directories to the `load-path', where Emacs
+;;   looks when you load packages with `require' or `use-package'.
+;; - `map!' for binding new keys
+;;
+;; To get information about any of these functions/macros, move the cursor over
+;; the highlighted symbol at press 'K' (non-evil users must press 'C-c g k').
+;; This will open documentation for it, including demos of how they are used.
+;;
+;; You can also try 'gd' (or 'C-c g d') to jump to their definition and see how
+;; they are implemented.
+
+(after! org (setq org-hide-emphasis-markers t
+                  org-hide-leading-stars t
+                  org-list-demote-modify-bullet '(("+" . "-") ("1." . "a.") ("-" . "+"))))
+
+(after! org (setq org-agenda-diary-file "~/.org/diary.org"
+                  org-agenda-dim-blocked-tasks t
+                  org-agenda-use-time-grid t
+;;                  org-agenda-hide-tags-regexp "\\w+"
+                  org-agenda-compact-blocks nil
+                  org-agenda-block-separator ""
+;;                  org-agenda-skip-scheduled-if-done t
+;;                  org-agenda-skip-deadline-if-done t
+                  org-enforce-todo-checkbox-dependencies nil
+                  org-enforce-todo-dependencies t))
+
+#+END_SRC
+
+#+RESULTS:
+: t
+
+** EXWM
+#+BEGIN_SRC elisp
+(require 'exwm)
+(require 'exwm-config)
+(exwm-config-default)
+(require 'exwm-randr)
+;;(setq exwm-randr-workspace-monitor-plist (0 "eDP1"))
+(add-hook 'exwm-randr-screen-change-hook
+          (lambda ()
+            (start-process-shell-command
+             "xrandr" nil "xrandr --output eDP1 --mode 1920x1080 --pos 0x0 --rotate normal")))
+ (exwm-randr-enable)
+(setq exwm-input-global-keys
+      `(
+        ([?\s-r] . exwm-reset)
+        ([?\s-h] . windmove-left)
+        ([?\s-l] . windmove-right)
+        ([?\s-k] . windmove-up)
+        ([?\s-j] . windmove-down)
+        ([?\s-o] . counsel-linux-app)
+        ([?\s-`] . (lambda () (interactive) (exwm-workspace-switch-create 0)))
+        ([?\s-w] . exwm-workspace-switch)
+        ,@(mapcar (lambda (i)
+                      `(,(kbd (format "s-%d" i)) .
+                        (lambda ()
+                          (interactive)
+                          (exwm-workspace-switch-create ,i))))
+                    (number-sequence 0 9))))
+
+(defun efs/set-wallpaper ()
+  (interactive)
+  (start-process-shell-command
+      "wal" nil  "wal -i ~/org/assets/pix/Background/pywal/hood-radio.jpg"))
+
+(defun efs/exwm-init-hook ()
+  (exwm-workspace-switch-create 1))
+
+  (display-battery-mode 1)
+  (setq display-time-day-and-date t)
+  (display-time-mode 1)
+
+  (defun efs/run-in-background (command)
+  (let ((command-parts (split-string command "[ ]+")))
+    (apply #'call-process `(,(car command-parts) nil 0 nil ,@(cdr command-parts)))))
+
+  (defun efs/exwm-update-class ()
+    (exwm-workspace-rename-buffer exwm-class-name))
+
+  (add-hook 'exwm-update-class-hook #'efs/exwm-update-class)
+  (add-hook 'exwm-init-hook #'efs/exwm-init-hook)
+  (efs/set-wallpaper)
+  (require 'exwm-systemtray)
+  (setq exwm-systemtray-height 32)
+  (exwm-systemtray-enable)
+;; (require 'exwm-systemtray)
+;; (exwm-systemtray-enable)
+
+#+END_SRC
+
+#+RESULTS:
+: (([8388722] . exwm-reset) ([8388712] . windmove-left) ([8388716] . windmove-right) ([8388715] . windmove-up) ([8388714] . windmove-down) ([8388719] . counsel-linux-app) ([8388704] lambda nil (interactive) (exwm-workspace-switch-create 0)) 0 1 2 3 4 5 6 7 8 9)
+
+** Elfeed
+#+BEGIN_SRC elisp
+(use-package elfeed
+  :commands elfeed
+  :config
+  (setq elfeed-feeds
+        '("https://www.reddit.com/r/kisslinux/.rss"))
+  )
+#+END_SRC
+** Syntax
+highlight
+#+BEGIN_SRC elisp
+(show-paren-mode 1)
+#+END_SRC
+
+** Org-Mode
+#+BEGIN_SRC elisp
+(defun efs/org-mode-setup ()
+  (org-indent-mode)
+  (variable-pitch-mode 1))
+;;  (visual-line-mode 0)
+
+;; Org Mode Configuration ------------------------------------------------------
+
+(defun efs/org-font-setup ()
+  ;; Replace list hyphen with dot
+  (font-lock-add-keywords 'org-mode
+                          '(("^ *\\([-]\\) "
+                             (0 (prog1 () (compose-region (match-beginning 1) (match-end 1) "•"))))))
+
+  ;; Set faces for heading levels
+  (dolist (face '((org-level-1 . 1.2)
+                  (org-level-2 . 1.1)
+                  (org-level-3 . 1.05)
+                  (org-level-4 . 1.0)
+                  (org-level-5 . 1.1)
+                  (org-level-6 . 1.1)
+                  (org-level-7 . 1.1)
+                  (org-level-8 . 1.1)))
+    (set-face-attribute (car face) nil :weight 'regular :height (cdr face)))
+
+  ;; Ensure that anything that should be fixed-pitch in Org files appears that way
+  (set-face-attribute 'org-block nil :foreground nil :inherit 'fixed-pitch)
+  (set-face-attribute 'org-code nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-table nil   :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-verbatim nil :inherit '(shadow fixed-pitch))
+  (set-face-attribute 'org-special-keyword nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-meta-line nil :inherit '(font-lock-comment-face fixed-pitch))
+  (set-face-attribute 'org-checkbox nil :inherit 'fixed-pitch))
+
+(use-package org
+  :hook (org-mode . efs/org-mode-setup)
+  :config
+  (setq org-ellipsis " ▾")
+  (efs/org-font-setup))
+
+(use-package org-bullets
+  :after org
+  :hook (org-mode . org-bullets-mode)
+  :custom
+  (org-bullets-bullet-list '("◉" "○" "●" "○" "●" "○" "●")))
+
+;;(defun efs/org-mode-visual-fill ()
+;;  (setq visual-fill-column-width 100
+;;        visual-fill-column-center-text t)
+;;  (visual-fill-column-mode 1))
+
+;;(use-package visual-fill-column
+;;  :hook (org-mode . efs/org-mode-visual-fill))
+
+;;(require 'ob-clojure)
+#+END_SRC
