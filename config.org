@@ -24,14 +24,14 @@ My Doom Emacs config
 ;;
 ;; They all accept either a font-spec, font string ("Input Mono-12"), or xlfd
 ;; font string. You generally only need these two:
-(setq doom-font (font-spec :family "DejaVu Sans Mono" :size 16))
+(setq doom-font (font-spec :family "Fira Code" :size 18))
 
 ;; There are two ways to load a theme. Both assume the theme is installed and
 ;; available. You can either set `doom-theme' or manually load a theme with the
 ;; `load-theme' function. These are the defaults.
 
 (setq poet-theme-variable-headers nil)
-(setq doom-theme 'doom-palenight)
+(setq doom-theme 'doom-henna)
 
 (add-hook 'text-mode-hook
           'auto-fill-mode)
@@ -64,10 +64,21 @@ My Doom Emacs config
 
 ;; If you want to change the style of line numbers, change this to `relative' or
 ;; `nil' to disable it:
-(setq display-line-numbers-type `nil)
+(setq display-line-numbers-type t)
 (setq display-time-mode 1)
 (setq display-time-day-and-date 1)
 
+
+(defun my-org-feed/tag-template
+  (tag)
+  (concat "\n* %h " tag " \nCreated: %U\nOriginal: %a \n\n%description\n\n"))
+
+(setq org-feed-alist
+      `(("Slashdot"
+         "http://rss.slashdot.org/Slashdot/slashdot"
+         "~/feeds.org" "Slashdot Entries"
+         :template ,(my-org-feed/tag-template ":testing:this:")
+         :drawer "slashdot")))
 
 ;; Here are some additional functions/macros that could help you configure Doom:
 ;;
@@ -238,4 +249,12 @@ highlight
 ;;  :hook (org-mode . efs/org-mode-visual-fill))
 
 ;;(require 'ob-clojure)
+
+(use-package! org-krita
+  :config
+  (add-hook 'org-mode-hook 'org-krita-mode))
+
+(with-eval-after-load 'org
+  (require 'org-menu)
+  (define-key org-mode-map (kbd "C-c m") 'org-menu))
 #+END_SRC
