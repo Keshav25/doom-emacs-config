@@ -49,16 +49,16 @@
 ;; ...Or *all* packages (NOT RECOMMENDED; will likely break things)
 ;(unpin! t)
 
+(package! org-bullets)
 (package! poet-theme)
-(package! org-menu)
 (package! org-krita
   :recipe (:host github
            :repo "lepisma/org-krita"
            :files ("resources" "resources" "*.el" "*.el")))
-(package! org-protocol)
-(package! s.el)
+(package! s)
 (package! org-protocol-capture-html
   :recipe (:host github
            :repo "alphapapa/org-protocol-capture-html"
            :files ("*.sh *.sh *.el *.el")))
 (package! weblorg)
+
