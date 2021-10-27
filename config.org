@@ -1,5 +1,5 @@
 * Doom Emacs Config
-My Doom Emacs config
+My Doom Emacs config. I no longer use Doom Emacs and have switched over to vanilla.
 ** Todos
 - [ ] enwc
 - [ ] desktop package to control backlight and system audio
